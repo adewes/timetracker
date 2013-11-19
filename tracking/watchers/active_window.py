@@ -5,17 +5,27 @@ from Xlib.protocol import rq
 
 import psutil
 import time
+from collections import defaultdict
 
 from base import BaseWatcher
 
 class ActiveWindowWatcher(BaseWatcher):
 
-    def __init__(self,queue,interval = 1.0):
-        super(ActiveWindowWatcher,self).__init__(queue)
+    def __init__(self,name,queue,interval = 1.0):
+        super(ActiveWindowWatcher,self).__init__(name,queue)
         self._last_time = time.time()
         self._interval = interval
 
+    def add_to_datapoint(self,x,y):
+        x[y['exe']][y['title']]+=y['time']
+        return x
+
+    def init_datapoint(self):
+        return defaultdict( lambda : defaultdict (lambda :0))
+
     def run(self):
+
+        self.disable_keyboard_interrupt()
 
         display = Display()
 
@@ -34,8 +44,7 @@ class ActiveWindowWatcher(BaseWatcher):
                             process = psutil.Process(pid)
                             name,exe,title = process.name,process.exe,window.get_wm_name()
                             value = {'exe':exe,'title':title.decode('latin-1'),'time':time.time()-self._last_time}
-                            print value
-                            self.send_event('active_process',value)
+                            self.send_event(value)
                             self._last_time = time.time()
                         except:
                             pass

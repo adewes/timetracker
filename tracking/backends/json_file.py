@@ -2,6 +2,7 @@ import json
 import datetime
 import time
 import os.path
+import pprint
 
 from base import BaseBackend
 
@@ -21,6 +22,7 @@ class JSONBackend(BaseBackend):
 
     def write_dict(self):
         with open(self.get_output_filename(),"ab") as output_file:
+            pprint.pprint(self._current_dict)
             output_file.write(json.dumps(self._current_dict).strip()+"\n")
 
     def get_dict(self):
@@ -31,7 +33,7 @@ class JSONBackend(BaseBackend):
             self._current_dict = {'timestamp' : self._current_time}
         return self._current_dict
 
-    def add(self,key,value,adder = lambda x,y:x+y,initializer = lambda :0):
+    def add_datapoint(self,key,value,adder,initializer):
         current_dict = self.get_dict()
         if not key in current_dict:
             current_dict[key] = initializer()
